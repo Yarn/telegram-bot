@@ -113,11 +113,10 @@ class FileList(TelegramHandler):
                     break
         return results
         
-    def _inlineQuery(self, query_id, query, offset):
+    def _inlineQuery(self, query_id, query, offset=''):
         bot = self.bot
         results_per_query = 20
-        results = """[{{"type":"article", "id":"{0}", "title":"{1}", "message_text":"{2}"}}]"""
-        results = results.format(1, "a", "/get gochu")
+        cache_time = 0
         
         if not offset:
             offset = 0
@@ -134,7 +133,7 @@ class FileList(TelegramHandler):
             #bot.sendMessage(chat_id, e.message)
             raise
             return
-        if results:
+        if results and len(results) > offset*results_per_query:
             results = [r[1] for r in results]
             results = sorted(results)
             #response = "\n".join(results)
@@ -142,16 +141,16 @@ class FileList(TelegramHandler):
             for result in results[results_per_query*-1:]:
                 d = {'type':"article", 'id':str(hash(result))[:64]}
                 d['title'] = result
-                d['message_text'] = "/get {0}".format(result)
+                d['message_text'] = "/get {0}".format(re.escape(result)[:30])
                 new_res.append(d)
             
             #bot.sendMessage(chat_id, response)
             import json
             res_json = json.dumps(new_res)
             #import pdb;pdb.set_trace()
-            bot.answer_inline_query(query_id, res_json, next_offset=offset+1, cache_time=0)
+            bot.answer_inline_query(query_id, res_json, next_offset=offset+1, cache_time=cache_time)
         else:
-            bot.answer_inline_query(query_id, "[]", next_offset=offset, cache_time=0)
+            bot.answer_inline_query(query_id, "[]", next_offset=offset, cache_time=cache_time)
         
         #print(results)
         #import pdb;pdb.set_trace()
