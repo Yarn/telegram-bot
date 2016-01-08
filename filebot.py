@@ -84,7 +84,7 @@ class FileServeBot():
                     try:
                         handler.update(update)
                     except telegram.Error:
-                        logger.exception("Telegram error from handler " + str(handler.__name__))
+                        logger.exception("Telegram error from handler " + str(handler.__repr__()))
 
                 logger.debug("\n")
                 logger.debug(update)

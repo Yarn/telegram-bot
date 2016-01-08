@@ -197,3 +197,18 @@ class Telegram:
         """
         url = self.url+"sendChatAction?chat_id={0}&action={1}".format(chat_id, action)
         self._get(url)
+
+    def answer_inline_query(self, query_id, results, next_offset="", cache_time=300, is_personal=None):
+        """/answerInlineQuery
+        
+        Args:
+            query_id (str)
+            results
+            cache_time (int)
+            is_personal (bool)
+            next_offset (str)
+        """
+        results = urllib.parse.quote(results, safe=[])
+        url = self.url+"answerInlineQuery?inline_query_id={0}&results={1}&next_offset={2}&cache_time={3}"
+        url = url.format(query_id, results, next_offset, cache_time)
+        self._get(url)

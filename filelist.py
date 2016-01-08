@@ -13,6 +13,10 @@ class RegexError(Error):
     def __init__(self, message):
         Error.__init__(self)
         self.message = message
+        
+class QueryError(Error):
+    def __init__(self):
+        Error.__init__(self)
 
 class FileList(TelegramHandler):
     def __init__(self, bot=None, config=None):
@@ -109,7 +113,51 @@ class FileList(TelegramHandler):
                     break
         return results
         
+    def _inlineQuery(self, query_id, query, offset):
+        bot = self.bot
+        results_per_query = 20
+        results = """[{{"type":"article", "id":"{0}", "title":"{1}", "message_text":"{2}"}}]"""
+        results = results.format(1, "a", "/get gochu")
+        
+        if not offset:
+            offset = 0
+        else:
+            try:
+                offset = int(offset)
+            except ValueError:
+                raise QueryError()
+        maxresults = (offset+1)*results_per_query
+        
+        try:
+            results = self._findFilesRe(query, maxresults=maxresults)
+        except RegexError as e:
+            #bot.sendMessage(chat_id, e.message)
+            raise
+            return
+        if results:
+            results = [r[1] for r in results]
+            results = sorted(results)
+            #response = "\n".join(results)
+            new_res = []
+            for result in results[results_per_query*-1:]:
+                d = {'type':"article", 'id':str(hash(result))[:64]}
+                d['title'] = result
+                d['message_text'] = "/get {0}".format(result)
+                new_res.append(d)
+            
+            #bot.sendMessage(chat_id, response)
+            import json
+            res_json = json.dumps(new_res)
+            #import pdb;pdb.set_trace()
+            bot.answer_inline_query(query_id, res_json, next_offset=offset+1, cache_time=0)
+        else:
+            bot.answer_inline_query(query_id, "[]", next_offset=offset, cache_time=0)
+        
+        #print(results)
+        #import pdb;pdb.set_trace()
+    
     def update(self, update):
+        TelegramHandler.update(self, update)
         bot = self.bot
         try:
             from_id = update['message']['from']['id']
@@ -129,13 +177,19 @@ class FileList(TelegramHandler):
                         logger.exception("document failed to send")
             elif text.startswith("/search "):
                 cmd = text.split(" ", 1)
+                if from_id == chat_id:
+                    maxresults = 30
+                else:
+                    maxresults = 10
                 try:
-                    results = self._findFilesRe(cmd[1])
+                    results = self._findFilesRe(cmd[1], maxresults=maxresults)
                 except RegexError as e:
                     bot.sendMessage(chat_id, e.message)
                     return
                 if results:
-                    response = "\n".join([r[1] for r in results])
+                    results = [r[1] for r in results]
+                    results = sorted(results)
+                    response = "\n".join(results)
                     bot.sendMessage(chat_id, response)
                     
         try:
@@ -152,3 +206,16 @@ class FileList(TelegramHandler):
                 logger.info("Recieved: {0}".format(fname))
                 self._addFile(fid, fname)
                 bot.sendMessage(chat_id, fname)
+                
+        try:
+            query = update['inline_query']
+            query_id = query['id']
+            query_offset = query['offset']
+            query_text = query['query']
+        except KeyError:
+            pass
+        else:
+            try:
+                self._inlineQuery(query_id, query_text, query_offset)
+            except Error:
+                logger.exception("error while handling inline query {0}".format(query))
