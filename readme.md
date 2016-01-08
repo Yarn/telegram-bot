@@ -8,8 +8,8 @@ python filebot.py
 config.txt
 ```
 auth token for bot
-comma seperated list of ids for admins
-comma seperated list of ids for sources
+comma separated list of ids for admins
+comma separated list of ids for sources
 use empty lines if not providing sources or admins
 ```
 

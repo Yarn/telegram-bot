@@ -102,7 +102,7 @@ class FileServeBot():
                     elif text == "/type":
                         bot.sendChatAction(chat_id, "typing")
                     elif text.startswith("/echo "):
-                        bot.sendMessage(chat_id, text.split(" ")[1])
+                        bot.sendMessage(chat_id, " ".join(text.split(" ")[1:]))
                     else:
                         pass
 
@@ -110,14 +110,16 @@ def main(offset=None):
     """
     config
     auth token for bot
-    comma seperated list of ids for admins
-    comma seperated list of ids for sources
+    comma separated list of ids for admins
+    comma separated list of ids for sources
     use empty lines if not providing sources or admins
     """
     with open("config.txt", 'r') as f:
         auth = f.readline().strip()
+        
         admins = (n.strip() for n in f.readline().split(","))
         admins = [int(n) for n in admins if n]
+    
         sources = (n.strip() for n in f.readline().split(","))
         sources = [int(n) for n in sources if n]
         
