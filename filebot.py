@@ -40,7 +40,6 @@ class FileServeBot():
 
     def start(self):
         """pls"""
-        sources = list(self.sources) + list(self.admins)
         bot = self.bot
         
         try:

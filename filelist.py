@@ -135,10 +135,10 @@ class FileList(TelegramHandler):
             return
         if results and len(results) > offset*results_per_query:
             results = [r[1] for r in results]
-            results = sorted(results)
+            #results = sorted(results)
             #response = "\n".join(results)
             new_res = []
-            for result in results[results_per_query*-1:]:
+            for result in results[-results_per_query:]:
                 d = {'type':"article", 'id':str(hash(result))[:64]}
                 d['title'] = result
                 d['message_text'] = "/get {0}".format(re.escape(result)[:30])
